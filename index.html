@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="it" data-lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Topic Modeling · Università Italiane · Alessandro Vadalà</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --white:   #FFFFFF;
+      --off:     #F3F6FA;
+      --blue1:   #1A2F4E;   /* darkest navy */
+      --blue2:   #214068;   /* mid navy */
+      --blue3:   #2E5899;   /* medium blue */
+      --blue4:   #4A7BC4;   /* lighter accent blue */
+      --blue5:   #D6E4F5;   /* very light blue tint */
+      --blue6:   #EAF1FB;   /* near-white blue */
+      --gold:    #C89A2A;   /* muted warm gold - marginal */
+      --text:    #1A2F4E;
+      --muted:   #6B80A0;
+      --border:  #D8E4F0;
+      --shadow:  0 4px 20px rgba(26,47,78,0.10);
+      --shadow2: 0 8px 32px rgba(26,47,78,0.14);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    /* ── LANG TOGGLE ── */
+    .lang-bar {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 clamp(20px, 6vw, 96px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .nav-logo {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--blue1);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-logo span { color: var(--blue3); }
+
+    .lang-switch {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--blue6);
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .lang-btn {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--blue3);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(46,88,153,0.25);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 72px clamp(20px, 6vw, 96px) 64px;
+      background: linear-gradient(160deg, var(--white) 55%, var(--blue6) 100%);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 56px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--blue3);
+      background: var(--blue6);
+      border: 1px solid var(--blue5);
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      color: var(--blue1);
+      margin-bottom: 20px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--blue3);
+      position: relative;
+    }
+
+    h1 em::after {
+      content: '';
+      position: absolute;
+      bottom: 3px; left: 0;
+      width: 100%; height: 3px;
+      background: var(--gold);
+      border-radius: 2px;
+      opacity: 0.7;
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.75;
+      font-weight: 400;
+      max-width: 520px;
+    }
+
+    .hero-sub strong { color: var(--blue1); font-weight: 600; }
+
+    /* ── STATS CARD ── */
+    .stats-card {
+      background: var(--blue1);
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: var(--shadow2);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .stats-card-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--blue4);
+      margin-bottom: 24px;
+    }
+
+    .stat-row {
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .stat-n {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-l {
+      font-size: 0.76rem;
+      color: rgba(255,255,255,0.4);
+      font-weight: 300;
+    }
+
+    /* ── META STRIP ── */
+    .meta-strip {
+      background: var(--off);
+      border-bottom: 1px solid var(--border);
+      padding: 22px clamp(20px, 6vw, 96px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px 48px;
+    }
+
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+
+    .meta-k {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--blue3);
+    }
+
+    .meta-v {
+      font-size: 0.86rem;
+      color: var(--blue1);
+      font-weight: 500;
+    }
+
+    /* ── SECTION ── */
+    .section {
+      padding: 72px clamp(20px, 6vw, 96px);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--blue3);
+      background: var(--blue6);
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--blue5);
+    }
+
+    .section-title {
+      font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--blue1);
+    }
+
+    /* ── CARDS GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, var(--blue3), var(--blue4));
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow2);
+      border-color: var(--blue5);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-num {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--blue4);
+      background: var(--blue6);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .card-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue3);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--blue1);
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+    }
+
+    .card-desc {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 400;
+      flex: 1;
+    }
+
+    .card-btn {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue6);
+      color: var(--blue3);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--blue5);
+      transition: background 0.2s, color 0.2s, gap 0.2s;
+      width: fit-content;
+    }
+
+    .card:hover .card-btn {
+      background: var(--blue3);
+      color: var(--white);
+      gap: 12px;
+      border-color: var(--blue3);
+    }
+
+    .card-btn::after { content: '→'; }
+
+    /* ── ABOUT ── */
+    .about-section {
+      background: linear-gradient(135deg, var(--blue1) 0%, var(--blue2) 100%);
+      padding: 72px clamp(20px, 6vw, 96px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+      align-items: start;
+    }
+
+    .about-eyebrow {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--blue4);
+      margin-bottom: 14px;
+    }
+
+    .about-title {
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    .about-title em {
+      font-style: italic;
+      color: var(--blue4);
+    }
+
+    .about-body {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    .about-body p + p { margin-top: 12px; }
+
+    .pills {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      font-size: 0.73rem;
+      font-weight: 500;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(74,123,196,0.15);
+      border: 1px solid rgba(74,123,196,0.3);
+      color: var(--blue4);
+    }
+
+    /* one gold pill for decoration */
+    .pill.gold {
+      background: rgba(200,154,42,0.12);
+      border-color: rgba(200,154,42,0.3);
+      color: #D4AA50;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px clamp(20px, 6vw, 96px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-l {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .footer-l strong { color: var(--blue1); font-weight: 600; }
+
+    .footer-r {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-left  { animation: fadeUp 0.55s ease 0.1s both; }
+    .stats-card { animation: fadeUp 0.55s ease 0.25s both; }
+    .meta-strip { animation: fadeUp 0.45s ease 0.35s both; }
+
+    .card {
+      opacity: 0;
+      animation: fadeUp 0.4s ease forwards;
+    }
+    .card:nth-child(1){animation-delay:0.05s}
+    .card:nth-child(2){animation-delay:0.12s}
+    .card:nth-child(3){animation-delay:0.19s}
+    .card:nth-child(4){animation-delay:0.26s}
+    .card:nth-child(5){animation-delay:0.33s}
+    .card:nth-child(6){animation-delay:0.40s}
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; }
+      .stats-card { display: none; }
+      .about-section { grid-template-columns: 1fr; gap: 32px; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ── I18N VISIBILITY ── */
+    [data-it], [data-en] { }
+    html[data-lang="it"] [data-en] { display: none; }
+    html[data-lang="en"] [data-it] { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="lang-bar">
+    <span class="nav-logo">Alessandro <span>Vadalà</span></span>
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('it')">IT</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-left">
+      <span class="eyebrow" data-it>Ricerca · NLP · Social Media · 2026</span>
+      <span class="eyebrow" data-en>Research · NLP · Social Media · 2026</span>
+
+      <h1 data-it>Topic Modeling<br/>sulla <em>Comunicazione Social</em><br/>delle Università Italiane</h1>
+      <h1 data-en>Topic Modeling<br/>on <em>Social Media Communication</em><br/>of Italian Universities</h1>
+
+      <p class="hero-sub" data-it>
+        Pipeline NLP non supervisionata su <strong>~800.000 post</strong> di LinkedIn,
+        Instagram e Facebook di oltre <strong>60 atenei italiani</strong>.
+        Dati forniti da <strong>Instant Analytics</strong>.
+        Presentato all'Università degli Studi del Molise.
+      </p>
+      <p class="hero-sub" data-en>
+        Unsupervised NLP pipeline on <strong>~800,000 posts</strong> from LinkedIn,
+        Instagram and Facebook of over <strong>60 Italian universities</strong>.
+        Data provided by <strong>Instant Analytics</strong>.
+        Presented at the University of Molise.
+      </p>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-card-label" data-it>Corpus della ricerca</div>
+      <div class="stats-card-label" data-en>Research corpus</div>
+      <div class="stat-row">
+        <span class="stat-n">~800k</span>
+        <span class="stat-l" data-it>post analizzati</span>
+        <span class="stat-l" data-en>posts analysed</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-n">60+</span>
+        <span class="stat-l" data-it>atenei italiani</span>
+        <span class="stat-l" data-en>Italian universities</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-n">3</span>
+        <span class="stat-l" data-it>piattaforme social</span>
+        <span class="stat-l" data-en>social platforms</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-n">30</span>
+        <span class="stat-l" data-it>topic semantici</span>
+        <span class="stat-l" data-en>semantic topics</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- META STRIP -->
+  <div class="meta-strip">
+    <div class="meta-item">
+      <span class="meta-k" data-it>Autore</span>
+      <span class="meta-k" data-en>Author</span>
+      <span class="meta-v">Alessandro Vadalà</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-k" data-it>Università</span>
+      <span class="meta-k" data-en>University</span>
+      <span class="meta-v" data-it>Università degli Studi del Molise</span>
+      <span class="meta-v" data-en>University of Molise</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-k" data-it>Dati</span>
+      <span class="meta-k" data-en>Data</span>
+      <span class="meta-v">Instant Analytics</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-k" data-it>Metodo</span>
+      <span class="meta-k" data-en>Method</span>
+      <span class="meta-v">BERTopic · SBERT · Llama 3.1</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-k" data-it>Anno</span>
+      <span class="meta-k" data-en>Year</span>
+      <span class="meta-v">2026</span>
+    </div>
+  </div>
+
+  <!-- CHARTS SECTION -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-label" data-it>Grafici interattivi</span>
+      <span class="section-label" data-en>Interactive charts</span>
+      <h2 class="section-title" data-it>Esplora i risultati</h2>
+      <h2 class="section-title" data-en>Explore the results</h2>
+    </div>
+
+    <div class="grid">
+
+      <a class="card" href="grafici/bertopic_barchart.html" target="_blank">
+        <div class="card-top">
+          <span class="card-num">01</span>
+          <span class="card-icon">📊</span>
+        </div>
+        <span class="card-tag" data-it>Distribuzione · c-TF-IDF</span>
+        <span class="card-tag" data-en>Distribution · c-TF-IDF</span>
+        <span class="card-title" data-it>I 30 Topic — Keyword per Cluster</span>
+        <span class="card-title" data-en>30 Topics — Keywords per Cluster</span>
+        <p class="card-desc" data-it>Barchart del peso c-TF-IDF per ciascun topic. Mostra le keyword più discriminanti per ogni cluster nel corpus universitario.</p>
+        <p class="card-desc" data-en>c-TF-IDF barchart for each topic. Shows the most discriminating keywords per cluster in the university corpus.</p>
+        <span class="card-btn" data-it>Apri grafico</span>
+        <span class="card-btn" data-en>Open chart</span>
+      </a>
+
+      <a class="card" href="grafici/mappa_atenei_interazioni.html" target="_blank">
+        <div class="card-top">
+          <span class="card-num">02</span>
+          <span class="card-icon">🗺️</span>
+        </div>
+        <span class="card-tag" data-it>Geografia · Interazioni Totali</span>
+        <span class="card-tag" data-en>Geography · Total Interactions</span>
+        <span class="card-title" data-it>Mappa Geografica degli Atenei</span>
+        <span class="card-title" data-en>Geographic Map of Universities</span>
+        <p class="card-desc" data-it>Interazioni totali per ateneo in scala logaritmica. Evidenzia il paradosso delle città medie e i cluster territoriali.</p>
+        <p class="card-desc" data-en>Total interactions per university on a log scale. Highlights the mid-size city paradox and territorial clusters.</p>
+        <span class="card-btn" data-it>Apri grafico</span>
+        <span class="card-btn" data-en>Open chart</span>
+      </a>
+
+      <a class="card" href="grafici/matrice_efficienza_engagement.html" target="_blank">
+        <div class="card-top">
+          <span class="card-num">03</span>
+          <span class="card-icon">⚡</span>
+        </div>
+        <span class="card-tag" data-it>Strategia · Posizionamento</span>
+        <span class="card-tag" data-en>Strategy · Positioning</span>
+        <span class="card-title" data-it>Matrice Efficienza-Engagement</span>
+        <span class="card-title" data-en>Efficiency-Engagement Matrix</span>
+        <p class="card-desc" data-it>Volume vs engagement medio per topic. Identifica nicchie d'oro, topic mainstream, contenuti saturi e marginali.</p>
+        <p class="card-desc" data-en>Volume vs average engagement per topic. Identifies golden niches, mainstream topics, saturated and marginal content.</p>
+        <span class="card-btn" data-it>Apri grafico</span>
+        <span class="card-btn" data-en>Open chart</span>
+      </a>
+
+      <a class="card" href="grafici/analisi_dimensione_ateneo_eng.html" target="_blank">
+        <div class="card-top">
+          <span class="card-num">04</span>
+          <span class="card-icon">🏛️</span>
+        </div>
+        <span class="card-tag" data-it>Dimensione · Valori Assoluti</span>
+        <span class="card-tag" data-en>Size · Absolute Values</span>
+        <span class="card-title" data-it>Engagement per Dimensione Istituzionale</span>
+        <span class="card-title" data-en>Engagement by Institutional Size</span>
+        <p class="card-desc" data-it>Heatmap dell'engagement medio per categoria (Mega, Grandi, Medi, Piccoli, Politecnici) incrociata con i 30 topic.</p>
+        <p class="card-desc" data-en>Heatmap of mean engagement by category (Mega, Large, Medium, Small, Polytechnics) crossed with the 30 topics.</p>
+        <span class="card-btn" data-it>Apri grafico</span>
+        <span class="card-btn" data-en>Open chart</span>
+      </a>
+
+      <a class="card" href="grafici/analisi_dimensione_ateneo_std.html" target="_blank">
+        <div class="card-top">
+          <span class="card-num">05</span>
+          <span class="card-icon">📐</span>
+        </div>
+        <span class="card-tag" data-it>Dimensione · Z-Score</span>
+        <span class="card-tag" data-en>Size · Z-Score</span>
+        <span class="card-title" data-it>Performance Relativa per Dimensione</span>
+        <span class="card-title" data-en>Relative Performance by Size</span>
+        <p class="card-desc" data-it>Versione standardizzata: elimina il vantaggio di scala degli atenei Mega e rivela le specializzazioni comunicative di ogni categoria.</p>
+        <p class="card-desc" data-en>Standardised version: removes the scale advantage of Mega universities and reveals the communication specialisations of each category.</p>
+        <span class="card-btn" data-it>Apri grafico</span>
+        <span class="card-btn" data-en>Open chart</span>
+      </a>
+
+      <a class="card" href="grafici/heatmap_strategia_social_std.html" target="_blank">
+        <div class="card-top">
+          <span class="card-num">06</span>
+          <span class="card-icon">📱</span>
+        </div>
+        <span class="card-tag" data-it>Cross-Platform · Z-Score</span>
+        <span class="card-tag" data-en>Cross-Platform · Z-Score</span>
+        <span class="card-title" data-it>Strategia Cross-Platform Standardizzata</span>
+        <span class="card-title" data-en>Standardised Cross-Platform Strategy</span>
+        <p class="card-desc" data-it>Dove LinkedIn, Instagram e Facebook sovra-performano rispetto alla propria baseline. Include il dato sui Bandi con Z negativo su tutti i canali.</p>
+        <p class="card-desc" data-en>Where LinkedIn, Instagram and Facebook outperform their own baseline. Includes the finding on Tenders with negative Z-score on all channels.</p>
+        <span class="card-btn" data-it>Apri grafico</span>
+        <span class="card-btn" data-en>Open chart</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <div class="about-section">
+    <div>
+      <div class="about-eyebrow" data-it>La ricerca</div>
+      <div class="about-eyebrow" data-en>About the research</div>
+      <h3 class="about-title" data-it>Pipeline NLP<br/><em>non supervisionata</em><br/>su hardware accessibile</h3>
+      <h3 class="about-title" data-en>Unsupervised NLP<br/><em>pipeline</em><br/>on consumer hardware</h3>
+    </div>
+    <div>
+      <div class="about-body" data-it>
+        <p>La ricerca applica topic modeling per estrarre pattern tematici dalla comunicazione social di oltre 60 atenei, con dati forniti da Instant Analytics.</p>
+        <p>La pipeline è ottimizzata per Google Colab con GPU T4: SBERT per gli embedding semantici, IncrementalPCA per la riduzione dimensionale, MiniBatchKMeans (k=60) per il clustering scalabile, c-TF-IDF per le keyword e Llama 3.1-8B a 4-bit per l'etichettatura automatica. I risultati vengono incrociati con l'anagrafica MUR per analisi per dimensione, regione e tipo istituzionale.</p>
+      </div>
+      <div class="about-body" data-en>
+        <p>The research applies topic modelling to extract thematic patterns from the social communication of over 60 Italian universities, using data provided by Instant Analytics.</p>
+        <p>The pipeline is optimised for Google Colab with a T4 GPU: SBERT for semantic embeddings, IncrementalPCA for dimensionality reduction, MiniBatchKMeans (k=60) for scalable clustering, c-TF-IDF for keywords and 4-bit Llama 3.1-8B for automatic labelling. Results are cross-referenced with the MUR registry for analysis by size, region and institutional type.</p>
+      </div>
+      <div class="pills">
+        <span class="pill">BERTopic</span>
+        <span class="pill">SBERT</span>
+        <span class="pill">IncrementalPCA</span>
+        <span class="pill">MiniBatchKMeans</span>
+        <span class="pill">Llama 3.1-8B</span>
+        <span class="pill">Plotly</span>
+        <span class="pill gold">Google Colab T4</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-l">
+      <strong>Alessandro Vadalà</strong> &nbsp;·&nbsp;
+      <span data-it>Università degli Studi del Molise · 2026</span>
+      <span data-en>University of Molise · 2026</span>
+    </span>
+    <span class="footer-r" data-it>Dati Instant Analytics · BERTopic + Llama 3.1</span>
+    <span class="footer-r" data-en>Data by Instant Analytics · BERTopic + Llama 3.1</span>
+  </footer>
+
+  <script>
+    function setLang(lang) {
+      document.documentElement.setAttribute('data-lang', lang);
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+      });
+    }
+  </script>
+
+</body>
+</html>
